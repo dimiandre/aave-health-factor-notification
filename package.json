@@ -1,0 +1,30 @@
+{
+  "name": "dimi-aave",
+  "version": "1.0.0",
+  "description": "Aave health monitoring project",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "watch": "tsc -w",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@aave/contract-helpers": "^1.33.1",
+    "@aave/math-utils": "^1.33.1",
+    "@bgd-labs/aave-address-book": "^4.18.0",
+    "chalk": "^4.1.2",
+    "dayjs": "^1.11.13",
+    "dotenv": "^16.4.5",
+    "ethers": "^5.8.0"
+  }
+}
