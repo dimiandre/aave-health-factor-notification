@@ -38,6 +38,18 @@ function getAccountAddress(): string {
   );
 }
 
+function getMonitoringInterval(): number {
+  const envInterval = process.env.MONITORING_INTERVAL;
+  if (envInterval) {
+    const interval = parseInt(envInterval, 10);
+    if (isNaN(interval) || interval < 1) {
+      throw new Error("MONITORING_INTERVAL must be a positive number");
+    }
+    return interval * 1000; // Convert seconds to milliseconds
+  }
+  return 20000; // Default to 20 seconds
+}
+
 function formatUSD(value: string): string {
   const num = parseFloat(value);
   return new Intl.NumberFormat("en-US", {
@@ -55,12 +67,11 @@ function formatHealthFactor(healthFactor: string): string {
   return chalk.red(healthFactor);
 }
 
-async function main() {
-  console.log(chalk.blue("\n🔍 Aave Health Monitor\n"));
+function clearConsole() {
+  console.clear();
+}
 
-  const currentAccount = getAccountAddress();
-  console.log(chalk.gray(`Monitoring address: ${currentAccount}\n`));
-
+async function checkPosition(currentAccount: string) {
   const { reserves, userReserves } = await fetchContractData(currentAccount);
 
   const reservesArray = reserves.reservesData;
@@ -90,6 +101,11 @@ async function main() {
   });
 
   // Print summary in a nice format
+  console.log(chalk.blue("\n🔍 Aave Health Monitor"));
+  console.log(
+    chalk.gray(`Last updated: ${dayjs().format("YYYY-MM-DD HH:mm:ss")}\n`)
+  );
+  console.log(chalk.gray(`Monitoring address: ${currentAccount}\n`));
   console.log(chalk.bold("📊 Position Summary"));
   console.log(chalk.gray("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"));
   console.log(
@@ -105,11 +121,11 @@ async function main() {
   console.log(
     `${chalk.bold("Liquidation Threshold:")} ${parseFloat(
       userSummary.currentLiquidationThreshold
-    ).toFixed(2)}%`
+    ).toFixed(3)}%`
   );
   console.log(
     `${chalk.bold("Health Factor:    ")} ${formatHealthFactor(
-      parseFloat(userSummary.healthFactor).toFixed(2)
+      parseFloat(userSummary.healthFactor).toFixed(3)
     )}`
   );
   console.log(chalk.gray("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"));
@@ -133,6 +149,32 @@ async function main() {
       )
     );
   }
+}
+
+async function main() {
+  const currentAccount = getAccountAddress();
+  const interval = getMonitoringInterval();
+
+  // Initial check
+  await checkPosition(currentAccount);
+
+  // Set up continuous monitoring
+  console.log(
+    chalk.gray(
+      `Press Ctrl+C to stop monitoring (updating every ${interval / 1000}s)\n`
+    )
+  );
+
+  // Run check at the specified interval
+  setInterval(async () => {
+    try {
+      clearConsole();
+      await checkPosition(currentAccount);
+    } catch (error) {
+      console.error(chalk.red("\n❌ Error:"), error);
+      // Don't exit, just log the error and continue monitoring
+    }
+  }, interval);
 }
 
 main().catch((error) => {
