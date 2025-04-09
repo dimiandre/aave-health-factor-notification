@@ -4,18 +4,11 @@ import dayjs from "dayjs";
 import dotenv from "dotenv";
 import { ethers } from "ethers";
 import chalk from "chalk";
-import TelegramBot from "node-telegram-bot-api";
+import { formatUSD, formatHealthFactor, clearConsole } from "./utils";
+import { sendTelegramAlert } from "./telegram";
 
 // Load environment variables
 dotenv.config();
-
-// Initialize Telegram bot if credentials are provided
-let telegramBot: TelegramBot | null = null;
-if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) {
-  telegramBot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, {
-    polling: false,
-  });
-}
 
 function getAccountAddress(): string {
   // Check command line arguments first
@@ -71,39 +64,6 @@ function getHealthFactorThreshold(): number {
     return threshold;
   }
   return 1.4; // Default threshold
-}
-
-async function sendTelegramAlert(message: string) {
-  if (!telegramBot || !process.env.TELEGRAM_CHAT_ID) return;
-
-  try {
-    await telegramBot.sendMessage(process.env.TELEGRAM_CHAT_ID, message, {
-      parse_mode: "HTML",
-    });
-  } catch (error) {
-    console.error(chalk.yellow("Failed to send Telegram notification:"), error);
-  }
-}
-
-function formatUSD(value: string): string {
-  const num = parseFloat(value);
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(num);
-}
-
-function formatHealthFactor(healthFactor: string): string {
-  const num = parseFloat(healthFactor);
-  if (num >= 2) return chalk.green(healthFactor);
-  if (num >= 1) return chalk.yellow(healthFactor);
-  return chalk.red(healthFactor);
-}
-
-function clearConsole() {
-  console.clear();
 }
 
 async function checkPosition(currentAccount: string) {
@@ -170,15 +130,6 @@ async function checkPosition(currentAccount: string) {
 
   // Check health factor and send Telegram alerts if configured
   if (healthFactor <= 1.2) {
-    const message =
-      `⚠️ <b>WARNING: Position at Risk!</b>\n\n` +
-      `Address: ${currentAccount}\n` +
-      `Health Factor: ${healthFactor.toFixed(3)}\n` +
-      `Total Collateral: ${formatUSD(userSummary.totalCollateralUSD)}\n` +
-      `Total Borrowed: ${formatUSD(userSummary.totalBorrowsUSD)}\n\n` +
-      `Your position is at risk of liquidation! Consider adding more collateral or reducing your borrowed amount.`;
-
-    await sendTelegramAlert(message);
     console.log(
       chalk.red("⚠️  WARNING: Your position is at risk of liquidation!")
     );
@@ -188,15 +139,6 @@ async function checkPosition(currentAccount: string) {
       )
     );
   } else if (healthFactor < threshold) {
-    const message =
-      `⚠️ <b>Health Factor Alert</b>\n\n` +
-      `Address: ${currentAccount}\n` +
-      `Health Factor: ${healthFactor.toFixed(3)}\n` +
-      `Total Collateral: ${formatUSD(userSummary.totalCollateralUSD)}\n` +
-      `Total Borrowed: ${formatUSD(userSummary.totalBorrowsUSD)}\n\n` +
-      `Your health factor is below ${threshold}. Consider adding more collateral to improve your position's safety.`;
-
-    await sendTelegramAlert(message);
     console.log(
       chalk.yellow(`⚠️  Caution: Your health factor is below ${threshold}`)
     );
@@ -206,6 +148,15 @@ async function checkPosition(currentAccount: string) {
       )
     );
   }
+
+  // Send Telegram alert if configured
+  await sendTelegramAlert(
+    currentAccount,
+    healthFactor,
+    userSummary.totalCollateralUSD,
+    userSummary.totalBorrowsUSD,
+    threshold
+  );
 }
 
 async function main() {
