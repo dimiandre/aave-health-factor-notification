@@ -1,0 +1,14 @@
+services:
+  aave-monitor:
+    build: .
+    container_name: aave-monitor
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./.env:/app/.env:ro
+    environment:
+      - NODE_ENV=production
+    # Keep the container running
+    tty: true
+    stdin_open: true

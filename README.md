@@ -10,8 +10,11 @@ A TypeScript project for monitoring Aave protocol health with Telegram notificat
 - Color-coded console output
 - Configurable health factor thresholds
 - Continuous monitoring with automatic updates
+- Docker support for easy deployment
 
 ## Setup
+
+### Local Development
 
 1. Install dependencies:
 
@@ -49,6 +52,32 @@ npm run build
 
 # Run the built project
 npm start
+```
+
+### Docker Deployment
+
+1. Configure environment variables:
+
+   - Copy `.env.example` to `.env`
+   - Set all required variables as described above
+
+2. Build and run with Docker Compose:
+
+```bash
+# Build and start the container
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Stop the container
+docker compose down
+```
+
+3. Rebuild after changes:
+
+```bash
+docker compose up -d --build
 ```
 
 ## Usage
@@ -144,10 +173,14 @@ The bot will send two types of notifications:
 - `src/` - TypeScript source files
   - `index.ts` - Main application entry point
   - `fetch.ts` - Aave data fetching logic
+  - `telegram.ts` - Telegram notification handling
+  - `utils.ts` - Shared utility functions
 - `dist/` - Compiled JavaScript files
 - `package.json` - Project configuration and dependencies
 - `tsconfig.json` - TypeScript configuration
 - `.env` - Environment variables (create from .env.example)
+- `Dockerfile` - Docker container configuration
+- `docker-compose.yml` - Docker Compose configuration
 
 ## License
 
