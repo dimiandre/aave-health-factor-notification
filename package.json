@@ -15,6 +15,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^20.11.24",
+    "@types/node-telegram-bot-api": "^0.64.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },
@@ -25,6 +26,7 @@
     "chalk": "^4.1.2",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.5",
-    "ethers": "^5.8.0"
+    "ethers": "^5.8.0",
+    "node-telegram-bot-api": "^0.64.0"
   }
 }
