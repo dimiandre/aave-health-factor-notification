@@ -20,3 +20,17 @@ export function formatHealthFactor(healthFactor: string): string {
 export function clearConsole() {
   console.clear();
 }
+
+export function getHealthFactorThreshold(): number {
+  const envThreshold = process.env.HEALTH_FACTOR_ALERT_THRESHOLD;
+  if (envThreshold) {
+    const threshold = parseFloat(envThreshold);
+    if (isNaN(threshold) || threshold <= 0) {
+      throw new Error(
+        "HEALTH_FACTOR_ALERT_THRESHOLD must be a positive number"
+      );
+    }
+    return threshold;
+  }
+  return 1.4; // Default threshold
+}

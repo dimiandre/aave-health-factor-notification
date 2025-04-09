@@ -1,11 +1,10 @@
-import { fetchContractData } from "./fetch";
-import { formatUserSummary, formatReserves } from "@aave/math-utils";
-import dayjs from "dayjs";
+import { getUserPosition, logUserPosition } from "./aave";
 import dotenv from "dotenv";
 import { ethers } from "ethers";
 import chalk from "chalk";
-import { formatUSD, formatHealthFactor, clearConsole } from "./utils";
-import { sendTelegramAlert } from "./telegram";
+import { clearConsole, getHealthFactorThreshold } from "./utils";
+import { listenMessages, sendTelegramAlert, setupBot } from "./telegram";
+import TelegramBot from "node-telegram-bot-api";
 
 // Load environment variables
 dotenv.config();
@@ -52,105 +51,15 @@ function getMonitoringInterval(): number {
   return 20000; // Default to 20 seconds
 }
 
-function getHealthFactorThreshold(): number {
-  const envThreshold = process.env.HEALTH_FACTOR_ALERT_THRESHOLD;
-  if (envThreshold) {
-    const threshold = parseFloat(envThreshold);
-    if (isNaN(threshold) || threshold <= 0) {
-      throw new Error(
-        "HEALTH_FACTOR_ALERT_THRESHOLD must be a positive number"
-      );
-    }
-    return threshold;
-  }
-  return 1.4; // Default threshold
-}
-
-async function checkPosition(currentAccount: string) {
-  const { reserves, userReserves } = await fetchContractData(currentAccount);
-
-  const reservesArray = reserves.reservesData;
-  const baseCurrencyData = reserves.baseCurrencyData;
-  const userReservesArray = userReserves.userReserves;
-
-  const currentTimestamp = dayjs().unix();
-
-  const formattedReserves = formatReserves({
-    reserves: reservesArray,
-    currentTimestamp,
-    marketReferenceCurrencyDecimals:
-      baseCurrencyData.marketReferenceCurrencyDecimals,
-    marketReferencePriceInUsd:
-      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-  });
-
-  const userSummary = formatUserSummary({
-    currentTimestamp,
-    marketReferencePriceInUsd:
-      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-    marketReferenceCurrencyDecimals:
-      baseCurrencyData.marketReferenceCurrencyDecimals,
-    userReserves: userReservesArray,
-    formattedReserves,
-    userEmodeCategoryId: userReserves.userEmodeCategoryId,
-  });
-
-  const healthFactor = parseFloat(userSummary.healthFactor);
+async function checkPosition(currentAccount: string, telegramBot: TelegramBot) {
+  const { healthFactor, userSummary } = await getUserPosition(currentAccount);
   const threshold = getHealthFactorThreshold();
 
-  // Print summary in a nice format
-  console.log(chalk.blue("\n🔍 Aave Health Monitor"));
-  console.log(
-    chalk.gray(`Last updated: ${dayjs().format("YYYY-MM-DD HH:mm:ss")}\n`)
-  );
-  console.log(chalk.gray(`Monitoring address: ${currentAccount}\n`));
-  console.log(chalk.bold("📊 Position Summary"));
-  console.log(chalk.gray("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"));
-  console.log(
-    `${chalk.bold("Total Collateral:")} ${formatUSD(
-      userSummary.totalCollateralUSD
-    )}`
-  );
-  console.log(
-    `${chalk.bold("Total Borrowed:  ")} ${formatUSD(
-      userSummary.totalBorrowsUSD
-    )}`
-  );
-  console.log(
-    `${chalk.bold("Liquidation Threshold:")} ${parseFloat(
-      userSummary.currentLiquidationThreshold
-    ).toFixed(3)}%`
-  );
-  console.log(
-    `${chalk.bold("Health Factor:    ")} ${formatHealthFactor(
-      parseFloat(userSummary.healthFactor).toFixed(3)
-    )}`
-  );
-  console.log(chalk.gray("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"));
-
-  // Check health factor and send Telegram alerts if configured
-  if (healthFactor <= 1.2) {
-    console.log(
-      chalk.red("⚠️  WARNING: Your position is at risk of liquidation!")
-    );
-    console.log(
-      chalk.yellow(
-        "Consider adding more collateral or reducing your borrowed amount.\n"
-      )
-    );
-  } else if (healthFactor < threshold) {
-    console.log(
-      chalk.yellow(`⚠️  Caution: Your health factor is below ${threshold}`)
-    );
-    console.log(
-      chalk.yellow(
-        "Consider adding more collateral to improve your position's safety.\n"
-      )
-    );
-  }
+  logUserPosition(currentAccount, healthFactor, threshold, userSummary);
 
   // Send Telegram alert if configured
   await sendTelegramAlert(
+    telegramBot,
     currentAccount,
     healthFactor,
     userSummary.totalCollateralUSD,
@@ -163,8 +72,14 @@ async function main() {
   const currentAccount = getAccountAddress();
   const interval = getMonitoringInterval();
 
+  const telegramBot = setupBot();
+
+  if (telegramBot === null) {
+    throw new Error("Can't setup telegram bot");
+  }
+
   // Initial check
-  await checkPosition(currentAccount);
+  await checkPosition(currentAccount, telegramBot);
 
   // Set up continuous monitoring
   console.log(
@@ -177,12 +92,14 @@ async function main() {
   setInterval(async () => {
     try {
       clearConsole();
-      await checkPosition(currentAccount);
+      await checkPosition(currentAccount, telegramBot);
     } catch (error) {
       console.error(chalk.red("\n❌ Error:"), error);
       // Don't exit, just log the error and continue monitoring
     }
   }, interval);
+
+  await listenMessages(telegramBot, currentAccount);
 }
 
 main().catch((error) => {
