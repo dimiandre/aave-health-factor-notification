@@ -1,4 +1,4 @@
-# Dimi Aave
+# AAVE Notifications Bot
 
 A TypeScript project for monitoring Aave protocol health with Telegram notifications.
 
