@@ -78,21 +78,20 @@ async function main() {
     throw new Error("Can't setup telegram bot");
   }
 
-  // Initial check
-  await checkPosition(currentAccount, telegramBot);
-
-  // Set up continuous monitoring
-  console.log(
-    chalk.gray(
-      `Press Ctrl+C to stop monitoring (updating every ${interval / 1000}s)\n`
-    )
-  );
-
   // Run check at the specified interval
   setInterval(async () => {
     try {
       clearConsole();
       await checkPosition(currentAccount, telegramBot);
+
+      // Set up continuous monitoring
+      console.log(
+        chalk.gray(
+          `Press Ctrl+C to stop monitoring (updating every ${
+            interval / 1000
+          }s)\n`
+        )
+      );
     } catch (error) {
       console.error(chalk.red("\n❌ Error:"), error);
       // Don't exit, just log the error and continue monitoring

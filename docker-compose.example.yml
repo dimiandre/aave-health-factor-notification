@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  aave-monitor:
+    image: dimiandre/aave-notifications-bot:latest
+    container_name: aave-monitor
+    restart: unless-stopped
+    environment:
+      # Required: Ethereum address to monitor
+      - ACCOUNT_ADDRESS=0x...
+      # Required: Ethereum RPC endpoint
+      - RPC_URL=https://eth-mainnet.public.blastapi.io
+      # Optional: Telegram Configuration
+      - TELEGRAM_BOT_TOKEN=your_bot_token_here
+      - TELEGRAM_CHAT_ID=your_chat_id_here
+      # Optional: Health factor threshold (default: 1.4)
+      - HEALTH_FACTOR_ALERT_THRESHOLD=1.4
+      - NODE_ENV=production
+    # Keep the container running
+    tty: true
+    stdin_open: true

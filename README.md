@@ -12,6 +12,42 @@ A TypeScript project for monitoring Aave protocol health with Telegram notificat
 - Continuous monitoring with automatic updates
 - Docker support for easy deployment
 
+## Quick Start with Docker
+
+The easiest way to run this project is using the pre-built Docker image:
+
+1. Create a new directory for your project:
+
+```bash
+mkdir aave-monitor && cd aave-monitor
+```
+
+2. Create a `docker-compose.yml` file:
+
+```bash
+cp docker-compose.example.yml docker-compose.yml
+```
+
+3. Edit the `docker-compose.yml` file and set your environment variables:
+
+   - `ACCOUNT_ADDRESS`: Your Ethereum address to monitor
+   - `RPC_URL`: Your Ethereum RPC endpoint
+   - `TELEGRAM_BOT_TOKEN`: (Optional) Your Telegram bot token
+   - `TELEGRAM_CHAT_ID`: (Optional) Your Telegram chat ID
+   - `HEALTH_FACTOR_ALERT_THRESHOLD`: (Optional) Alert threshold (default: 1.4)
+
+4. Start the container:
+
+```bash
+docker compose up -d
+```
+
+5. View the logs:
+
+```bash
+docker compose logs -f
+```
+
 ## Setup
 
 ### Local Development

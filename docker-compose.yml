@@ -8,6 +8,11 @@ services:
     volumes:
       - ./.env:/app/.env:ro
     environment:
+      - ACCOUNT_ADDRESS=${ACCOUNT_ADDRESS}
+      - RPC_URL=${RPC_URL}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      - HEALTH_FACTOR_ALERT_THRESHOLD=${HEALTH_FACTOR_ALERT_THRESHOLD:-1.4}
       - NODE_ENV=production
     # Keep the container running
     tty: true
