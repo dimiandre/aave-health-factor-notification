@@ -276,4 +276,6 @@ The bot will respond with a formatted message containing all the current positio
 
 ## License
 
-ISC
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+
+The GPL-3.0 license requires that any derivative works must also be licensed under GPL-3.0 and that the source code must be made available to users. This ensures that the software remains free and open source.
