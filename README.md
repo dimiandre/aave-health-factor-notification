@@ -14,6 +14,8 @@ A TypeScript project for monitoring Aave protocol health with Telegram notificat
 
 ## Quick Start with Docker
 
+### Option 1: Using Docker Compose (Recommended)
+
 The easiest way to run this project is using the pre-built Docker image:
 
 1. Create a new directory for your project:
@@ -46,6 +48,46 @@ docker compose up -d
 
 ```bash
 docker compose logs -f
+```
+
+### Option 2: Using Docker Run
+
+You can also run the container with a single command:
+
+```bash
+docker run -d \
+  --name aave-monitor \
+  --restart unless-stopped \
+  -e ACCOUNT_ADDRESS=0x... \
+  -e RPC_URL=https://eth-mainnet.public.blastapi.io \
+  -e TELEGRAM_BOT_TOKEN=your_bot_token_here \
+  -e TELEGRAM_CHAT_ID=your_chat_id_here \
+  -e HEALTH_FACTOR_ALERT_THRESHOLD=1.4 \
+  -e NODE_ENV=production \
+  dimiandre/aave-notifications-bot:latest
+```
+
+Or using an environment file:
+
+```bash
+docker run -d \
+  --name aave-monitor \
+  --restart unless-stopped \
+  --env-file .env \
+  dimiandre/aave-notifications-bot:latest
+```
+
+Useful commands:
+
+```bash
+# View logs
+docker logs -f aave-monitor
+
+# Stop the container
+docker stop aave-monitor
+
+# Remove the container
+docker rm aave-monitor
 ```
 
 ## Setup
