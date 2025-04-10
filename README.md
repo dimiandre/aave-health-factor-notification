@@ -11,6 +11,7 @@ A TypeScript project for monitoring Aave protocol health with Telegram notificat
 - Configurable health factor thresholds
 - Continuous monitoring with automatic updates
 - Docker support for easy deployment
+- Telegram bot commands for status updates
 
 ## Quick Start with Docker
 
@@ -245,6 +246,19 @@ The bot will send two types of notifications:
 2. Warning Alert (Health Factor < threshold):
    - Sent when health factor drops below configured threshold
    - Includes position details and recommendations
+
+## Telegram Bot Commands
+
+Once the bot is running and configured with your Telegram credentials, you can interact with it:
+
+- Send `status` to the bot to get the current position information, including:
+  - Current health factor
+  - Total borrowed amount
+  - Total supplied amount
+  - Current utilization rate
+  - Latest update timestamp
+
+The bot will respond with a formatted message containing all the current position details.
 
 ## Project Structure
 
